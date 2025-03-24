@@ -16,6 +16,15 @@ const setAuthHeader = () => {
   }
 };
 
+export const updateTodo = async (id, title) => {
+    try {
+      const response = await axios.put(`${API_URL}/${id}`, { title });
+      return response.data.data;
+    } catch (error) {
+      console.error("Error updating todo:", error.response?.data || error.message);
+      return null;
+    }
+  };
 // Fetch all todos
 export const fetchTodos = async () => {
   try {

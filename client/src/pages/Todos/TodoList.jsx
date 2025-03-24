@@ -1,10 +1,36 @@
 import React, { useState, useEffect } from "react";
-import { FaTrash, FaCheck, FaPlus } from "react-icons/fa";
-import { fetchTodos, addTodo, toggleComplete, deleteTodo } from "../../Services/todoService";
+import { FaTrash, FaCheck, FaEdit, FaPlus, FaSave } from "react-icons/fa";
+import { fetchTodos, addTodo, toggleComplete, deleteTodo, updateTodo } from "../../Services/todoService";
 
 const TodoList = () => {
   const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState("");
+
+  const [editingTodoId, setEditingTodoId] = useState(null);
+  const [updatedTitle, setUpdatedTitle] = useState("");
+
+  // Function to enable edit mode
+  const handleEditTodo = (id, title) => {
+    setEditingTodoId(id);
+    setUpdatedTitle(title);
+  };
+
+  // Function to update todo
+  const handleUpdateTodo = async (id) => {
+    if (!updatedTitle.trim()) return;
+
+    const updatedTodo = await updateTodo(id, updatedTitle);
+    if (updatedTodo) {
+      setTodos(
+        todos.map((todo) =>
+          todo._id === id ? { ...todo, title: updatedTitle } : todo
+        )
+      );
+    }
+
+    setEditingTodoId(null);
+    setUpdatedTitle("");
+  };
 
   // Fetch todos on mount
   useEffect(() => {
@@ -29,7 +55,9 @@ const TodoList = () => {
   const handleToggleComplete = async (id, status) => {
     const newStatus = await toggleComplete(id, status);
     setTodos(
-      todos.map((todo) => (todo._id === id ? { ...todo, status: newStatus } : todo))
+      todos.map((todo) =>
+        todo._id === id ? { ...todo, status: newStatus } : todo
+      )
     );
   };
 
@@ -72,7 +100,18 @@ const TodoList = () => {
                   todo.status === "completed" ? "opacity-50 line-through" : ""
                 }`}
               >
-                <span>{todo.title}</span>
+                {/* Show input field when editing */}
+                {editingTodoId === todo._id ? (
+                  <input
+                    type="text"
+                    value={updatedTitle}
+                    onChange={(e) => setUpdatedTitle(e.target.value)}
+                    className="p-1 bg-gray-800 text-white rounded-md w-2/3"
+                  />
+                ) : (
+                  <span>{todo.title}</span>
+                )}
+
                 <div className="flex gap-3">
                   <button
                     className={`p-2 rounded-full ${
@@ -82,6 +121,16 @@ const TodoList = () => {
                   >
                     <FaCheck />
                   </button>
+
+                  {editingTodoId === todo._id ? (
+                    <button className="p-2 bg-green-500 rounded-full" onClick={() => handleUpdateTodo(todo._id)}>
+                      <FaSave />
+                    </button>
+                  ) : (
+                    <button className="p-2 bg-yellow-500 rounded-full" onClick={() => handleEditTodo(todo._id, todo.title)}>
+                      <FaEdit />
+                    </button>
+                  )}
 
                   <button className="p-2 bg-red-600 rounded-full" onClick={() => handleDeleteTodo(todo._id)}>
                     <FaTrash />
